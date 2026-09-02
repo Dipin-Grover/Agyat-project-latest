@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.844.0",
+    "@aws-sdk/client-sqs": "^3.844.0",
+    "@types/dotenv": "^6.1.1",
+    "@types/typescript": "^0.4.29",
+    "dotenv": "^17.2.0",
+    "typescript": "^5.8.3"
+  }
+}
