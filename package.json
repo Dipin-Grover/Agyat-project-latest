@@ -1,0 +1,21 @@
+{
+  "name": "agyat-vercel-api",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "vercel-build": "tsc",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.844.0",
+    "@aws-sdk/client-sqs": "^3.844.0",
+    "@aws-sdk/lib-dynamodb": "^3.844.0",
+    "aws-sdk": "^2.1692.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vercel/node": "^5.3.0",
+    "typescript": "^5.8.3",
+    "vercel": "^59.11.2"
+  }
+}

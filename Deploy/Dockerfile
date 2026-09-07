@@ -2,17 +2,18 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache git
+
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY . .
 
-# Build TypeScript
-# RUN npm run build
+RUN npm run build
 
 # Start the worker
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]

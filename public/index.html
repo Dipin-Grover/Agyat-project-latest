@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agyat Deployments</title>
+  <style>
+    :root { color-scheme: dark; --ink:#f4f1e8; --muted:#a6aaa5; --line:#303833; --accent:#f4b860; --panel:#141a17; --bg:#0b100e; }
+    * { box-sizing:border-box; } body { margin:0; min-height:100vh; color:var(--ink); background:radial-gradient(circle at 80% 0%, #1c3027 0, transparent 38%), var(--bg); font:16px/1.5 Georgia, serif; }
+    main { width:min(920px, 100%); margin:auto; padding:8vh 24px 64px; } .eyebrow { color:var(--accent); letter-spacing:.14em; text-transform:uppercase; font:12px/1.2 ui-monospace, monospace; }
+    h1 { max-width:700px; margin:18px 0 12px; font-size:clamp(42px, 8vw, 82px); line-height:.98; font-weight:500; } .lede { max-width:570px; color:var(--muted); font-size:19px; }
+    form { display:flex; gap:10px; margin-top:34px; } input, button { border:1px solid var(--line); border-radius:4px; padding:15px 16px; font:15px ui-monospace, monospace; } input { min-width:0; flex:1; color:var(--ink); background:var(--panel); } button { color:#15130d; background:var(--accent); cursor:pointer; } button:disabled { opacity:.5; cursor:wait; }
+    #result { display:none; margin-top:26px; padding:22px; border:1px solid var(--line); background:rgba(20,26,23,.82); } #result.show { display:block; } .label { color:var(--muted); font:12px ui-monospace, monospace; text-transform:uppercase; } #status { margin:6px 0 14px; color:var(--accent); font-size:26px; } #message { color:var(--muted); white-space:pre-wrap; } a { color:var(--accent); }
+    .preview-btn { display:inline-block; margin-top:8px; padding:12px 20px; background-color:var(--accent); color:#15130d; text-decoration:none; border-radius:4px; font-weight:600; font-family:ui-monospace, monospace; transition: opacity 0.2s; }
+    .preview-btn:hover { opacity:0.85; }
+    @media (max-width:600px) { main { padding-top:48px; } form { flex-direction:column; } button { width:100%; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Agyat / deployment engine</div>
+    <h1>Ship a GitHub project to the web.</h1>
+    <p class="lede">Queue a public GitHub repository, build it asynchronously, and get a live preview when it is ready.</p>
+    <form id="deploy-form">
+      <input id="repo-url" type="url" placeholder="https://github.com/owner/repository" required>
+      <button id="deploy-button" type="submit">Deploy repository</button>
+    </form>
+    <section id="result" aria-live="polite"><div class="label">Deployment status</div><div id="status">queued</div><div id="message"></div></section>
+  </main>
+  <script>
+    const form = document.querySelector('#deploy-form'); const input = document.querySelector('#repo-url'); const button = document.querySelector('#deploy-button'); const result = document.querySelector('#result'); const status = document.querySelector('#status'); const message = document.querySelector('#message');
+    form.addEventListener('submit', async (event) => { event.preventDefault(); button.disabled = true; result.classList.add('show'); status.textContent = 'queuing'; message.textContent = ''; try { const response = await fetch('/api/deploy', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({repoUrl:input.value}) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Deployment could not be queued'); status.textContent = data.status; poll(data.id); } catch (error) { status.textContent = 'failed'; message.textContent = error.message; button.disabled = false; } });
+    async function poll(id) { try { const response = await fetch('/api/status/' + encodeURIComponent(id)); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Could not fetch deployment status'); status.textContent = data.status || 'unknown'; message.innerHTML = data.error ? escapeHtml(data.error) : data.previewUrl ? '<br><a href="' + encodeURI(data.previewUrl) + '" target="_blank" rel="noopener" class="preview-btn">View your website 🚀</a>' : 'Deployment ID: ' + id; if (data.status === 'queued' || data.status === 'building') setTimeout(() => poll(id), 2500); else button.disabled = false; } catch (error) { status.textContent = 'status unavailable'; message.textContent = error.message + '. Check that the local Vercel server is running.'; button.disabled = false; } }
+    function escapeHtml(value) { const element = document.createElement('div'); element.textContent = value; return element.innerHTML; }
+  </script>
+</body>
+</html>

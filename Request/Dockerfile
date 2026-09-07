@@ -6,16 +6,15 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY . .
 
-# Build TypeScript
-# RUN npm run build
+RUN npm run build
 
 # Expose port (Request service uses 3001)
 EXPOSE 3001
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]

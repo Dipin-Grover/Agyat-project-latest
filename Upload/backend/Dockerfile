@@ -7,16 +7,15 @@ COPY package*.json ./
 
 # Install dependencies and git
 RUN apk add --no-cache git
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY . .
 
-# Build TypeScript
-# RUN npm run build
+RUN npm run build
 
 # Expose port (Upload service uses 3000)
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]
