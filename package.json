@@ -4,6 +4,7 @@
   "scripts": {
     "build": "tsc",
     "vercel-build": "tsc",
+    "dev": "vercel dev",
     "test": "node --test"
   },
   "dependencies": {

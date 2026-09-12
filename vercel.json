@@ -1,7 +1,18 @@
 {
+  "trailingSlash": false,
   "functions": {
     "api/**/*.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/preview/:id",
+      "destination": "/api/preview?path=:id"
+    },
+    {
+      "source": "/api/preview/:id/:path*",
+      "destination": "/api/preview?path=:id/:path*"
+    }
+  ]
 }

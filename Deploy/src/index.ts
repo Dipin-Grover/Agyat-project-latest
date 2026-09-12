@@ -104,7 +104,7 @@ async function removeBuildDirectory(targetDir: string) {
 function buildPreviewUrl(id: string) {
     const baseUrl = process.env.PREVIEW_BASE_URL || "http://localhost:3000";
     const base = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-    return `${base}/api/preview/${id}/`;
+    return `${base}/api/preview/${id}`;
 }
 
 async function updateStatus(id: string, status: string, error?: string, previewUrl?: string) {
