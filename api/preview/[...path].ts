@@ -54,10 +54,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: "Preview service is not configured" });
   }
 
-  const pathArray = req.query.path as string[];
-  if (!pathArray || pathArray.length === 0) {
-    return res.status(400).send("Missing preview ID");
+  // const pathArray = req.query.path as string[];
+  // if (!pathArray || pathArray.length === 0) {
+  //   return res.status(400).send("Missing preview ID");
+  // }
+
+
+
+  const rawPath = req.query.path;
+
+let pathArray: string[] = [];
+
+if (Array.isArray(rawPath)) {
+  pathArray = rawPath;
+} else if (typeof rawPath === "string") {
+  pathArray = rawPath.split("/").filter(Boolean);
+}
+
+if (pathArray.length === 0 && req.url) {
+  const pathname = new URL(
+    req.url,
+    `https://${req.headers.host || "localhost"}`
+  ).pathname;
+
+  const prefix = "/api/preview/";
+
+  if (pathname.startsWith(prefix)) {
+    pathArray = pathname
+      .slice(prefix.length)
+      .split("/")
+      .filter(Boolean);
   }
+}
+
+if (pathArray.length === 0) {
+  return res.status(400).send("Missing preview ID");
+}
 
   const id = pathArray[0];
   let filePath = "/" + pathArray.slice(1).join("/");
