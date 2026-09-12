@@ -62,16 +62,17 @@ export async function copyFinalDist(id: string) {
         folderPath = path.join(__dirname, `output/${id}`);
     }
     if (!fs.existsSync(folderPath)) {
-        console.error(`Build output directory does not exist for ${id}`);
-        return;
+        throw new Error(`Build output directory does not exist for ${id}`);
     }
     const allFiles = getAllFiles(folderPath);
-    const promises = allFiles
-        .filter(file => !file.includes("node_modules") && !file.includes(".git"))
-        .map(file => {
-            const relativePath = file.slice(folderPath.length + 1).replace(/\\/g, '/');
-            return uploadFile(`dist/${id}/` + relativePath, file);
-        });
+    const uploadTargets = allFiles.filter(file => !file.includes("node_modules") && !file.includes(".git"));
+    if (uploadTargets.length === 0) {
+        throw new Error(`No build artifacts found for ${id}`);
+    }
+    const promises = uploadTargets.map(file => {
+        const relativePath = file.slice(folderPath.length + 1).replace(/\\/g, '/');
+        return uploadFile(`dist/${id}/` + relativePath, file);
+    });
     console.log(`Uploading ${promises.length} files to S3 for ${id}...`);
     await Promise.all(promises);
     console.log(`Finished uploading ${promises.length} files to S3 for dist/${id}`);

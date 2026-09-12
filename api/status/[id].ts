@@ -1,11 +1,15 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { getAwsCredentials, getAwsRegion, getDeploymentsTable } from "../lib/config.js";
 
-const dynamo = DynamoDBDocumentClient.from(
-  new DynamoDBClient({ region: process.env.AWS_REGION }),
-);
-const tableName = process.env.AWS_DEPLOYMENTS_TABLE || process.env.AWS_DYNAMO_DB_NAME;
+function createDynamo() {
+  const region = getAwsRegion();
+  const credentials = getAwsCredentials();
+  if (!region || !credentials) return null;
+
+  return DynamoDBDocumentClient.from(new DynamoDBClient({ region, credentials }));
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
@@ -14,7 +18,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const id = typeof req.query.id === "string" ? req.query.id : "";
-  if (!id || !tableName) {
+  const tableName = getDeploymentsTable();
+  const dynamo = createDynamo();
+
+  if (!id || !tableName || !dynamo) {
     return res.status(400).json({ error: "Invalid deployment request" });
   }
 

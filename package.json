@@ -8,9 +8,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.844.0",
+    "@aws-sdk/client-s3": "^3.844.0",
     "@aws-sdk/client-sqs": "^3.844.0",
-    "@aws-sdk/lib-dynamodb": "^3.844.0",
-    "aws-sdk": "^2.1692.0"
+    "@aws-sdk/lib-dynamodb": "^3.844.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
