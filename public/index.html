@@ -29,9 +29,70 @@
   </main>
   <script>
     const form = document.querySelector('#deploy-form'); const input = document.querySelector('#repo-url'); const button = document.querySelector('#deploy-button'); const result = document.querySelector('#result'); const status = document.querySelector('#status'); const message = document.querySelector('#message');
-    form.addEventListener('submit', async (event) => { event.preventDefault(); button.disabled = true; result.classList.add('show'); status.textContent = 'queuing'; message.textContent = ''; try { const response = await fetch('/api/deploy', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({repoUrl:input.value}) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Deployment could not be queued'); status.textContent = data.status; poll(data.id); } catch (error) { status.textContent = 'failed'; message.textContent = error.message; button.disabled = false; } });
+    
     let pollCount = 0;
-    async function poll(id) { try { const response = await fetch('/api/status/' + encodeURIComponent(id)); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Could not fetch deployment status'); status.textContent = data.status || 'unknown'; pollCount += 1; if (data.error) { message.innerHTML = escapeHtml(data.error); } else if (data.previewUrl) { message.innerHTML = '<br><a href="' + encodeURI(data.previewUrl) + '" target="_blank" rel="noopener" class="preview-btn">View your website 🚀</a>'; } else if (data.status === 'queued' && pollCount > 12) { message.textContent = 'Still queued. Make sure the Deploy worker is running on Railway or locally (npm start in Deploy/).'; } else { message.textContent = 'Deployment ID: ' + id; } if (data.status === 'queued' || data.status === 'building') setTimeout(() => poll(id), 2500); else button.disabled = false; } catch (error) { status.textContent = 'status unavailable'; message.textContent = error.message; button.disabled = false; } }
+    let currentDeploymentId = null;
+
+    form.addEventListener('submit', async (event) => { 
+        event.preventDefault(); 
+        button.disabled = true; 
+        result.classList.add('show'); 
+        status.textContent = 'queuing'; 
+        message.textContent = ''; 
+        pollCount = 0; // Reset poll count for new deployment
+        
+        try { 
+            const response = await fetch('/api/deploy', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({repoUrl:input.value}) }); 
+            const data = await response.json(); 
+            if (!response.ok) throw new Error(data.error || 'Deployment could not be queued'); 
+            
+            status.textContent = data.status; 
+            currentDeploymentId = data.id; // Track the active deployment
+            poll(data.id); 
+        } catch (error) { 
+            status.textContent = 'failed'; 
+            message.textContent = error.message; 
+            button.disabled = false; 
+        } 
+    });
+
+    async function poll(id) { 
+        // Stop if the user started a new deployment
+        if (currentDeploymentId !== id) return;
+
+        try { 
+            const response = await fetch('/api/status/' + encodeURIComponent(id)); 
+            const data = await response.json(); 
+            
+            // Recheck in case user submitted while fetching
+            if (currentDeploymentId !== id) return;
+
+            if (!response.ok) throw new Error(data.error || 'Could not fetch deployment status'); 
+            status.textContent = data.status || 'unknown'; 
+            pollCount += 1; 
+
+            if (data.error) { 
+                message.innerHTML = escapeHtml(data.error); 
+            } else if (data.previewUrl) { 
+                message.innerHTML = '<br><a href="' + encodeURI(data.previewUrl) + '" target="_blank" rel="noopener" class="preview-btn">View your website 🚀</a>'; 
+            } else if (data.status === 'queued' && pollCount > 12) { 
+                message.textContent = 'Still queued. Make sure the Deploy worker is running on Railway or locally (npm start in Deploy/).'; 
+            } else { 
+                message.textContent = 'Deployment ID: ' + id; 
+            } 
+
+            if (data.status === 'queued' || data.status === 'building') {
+                setTimeout(() => poll(id), 2500); 
+            } else {
+                button.disabled = false; 
+            }
+        } catch (error) { 
+            status.textContent = 'status unavailable'; 
+            message.textContent = error.message; 
+            button.disabled = false; 
+        } 
+    }
+    
     function escapeHtml(value) { const element = document.createElement('div'); element.textContent = value; return element.innerHTML; }
   </script>
 </body>

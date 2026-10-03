@@ -28,7 +28,12 @@ export function buildProject(id: string) {
             return;
         }
 
-        const child = exec(command, { cwd: targetDir, timeout: 10 * 60 * 1000, maxBuffer: 10 * 1024 * 1024 });
+        const child = exec(command, { 
+            cwd: targetDir, 
+            timeout: 10 * 60 * 1000, 
+            maxBuffer: 10 * 1024 * 1024,
+            env: { ...process.env, NODE_OPTIONS: '--openssl-legacy-provider' }
+        });
 
         let output = "";
         child.stdout?.on('data', function(data) {
